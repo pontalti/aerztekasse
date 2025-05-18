@@ -1,0 +1,142 @@
+{
+    "places": [
+        {
+            "label": "Le Café du Marché",
+            "location": "Rue de Conthey 17, 1950 Sion",
+            "opening_hours": {
+                "days": {
+                    "tuesday": [
+                        {
+                            "start": "11:30",
+                            "end": "15:00",
+                            "type": "OPEN"
+                        },
+                        {
+                            "start": "18:30",
+                            "end": "00:00",
+                            "type": "OPEN"
+                        }
+                    ],
+                    "wednesday": [
+                        {
+                            "start": "11:30",
+                            "end": "15:00",
+                            "type": "OPEN"
+                        },
+                        {
+                            "start": "18:30",
+                            "end": "00:00",
+                            "type": "OPEN"
+                        }
+                    ],
+                    "thursday": [
+                        {
+                            "start": "11:30",
+                            "end": "15:00",
+                            "type": "OPEN"
+                        },
+                        {
+                            "start": "18:30",
+                            "end": "00:00",
+                            "type": "OPEN"
+                        }
+                    ],
+                    "friday": [
+                        {
+                            "start": "11:30",
+                            "end": "15:00",
+                            "type": "OPEN"
+                        },
+                        {
+                            "start": "18:30",
+                            "end": "00:00",
+                            "type": "OPEN"
+                        }
+                    ],
+                    "saturday": [
+                        {
+                            "start": "18:00",
+                            "end": "00:00",
+                            "type": "OPEN"
+                        }
+                    ],
+                    "sunday": [
+                        {
+                            "start": "11:30",
+                            "end": "15:00",
+                            "type": "OPEN"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "label": "Casa Ferlin",
+            "location": "Stampfenbachstrasse 38, 8006 Zürich",
+            "opening_hours": {
+                "days": {
+                    "monday": [
+                        {
+                            "start": "11:30",
+                            "end": "14:00",
+                            "type": "OPEN"
+                        },
+                        {
+                            "start": "18:30",
+                            "end": "22:00",
+                            "type": "OPEN"
+                        }
+                    ],
+                    "tuesday": [
+                        {
+                            "start": "11:30",
+                            "end": "14:00",
+                            "type": "OPEN"
+                        },
+                        {
+                            "start": "18:30",
+                            "end": "22:00",
+                            "type": "OPEN"
+                        }
+                    ],
+                    "wednesday": [
+                        {
+                            "start": "11:30",
+                            "end": "14:00",
+                            "type": "OPEN"
+                        },
+                        {
+                            "start": "18:30",
+                            "end": "22:00",
+                            "type": "OPEN"
+                        }
+                    ],
+                    "thursday": [
+                        {
+                            "start": "11:30",
+                            "end": "14:00",
+                            "type": "OPEN"
+                        },
+                        {
+                            "start": "18:30",
+                            "end": "22:00",
+                            "type": "OPEN"
+                        }
+                    ],
+                    "friday": [
+                        {
+                            "start": "11:30",
+                            "end": "14:00",
+                            "type": "OPEN"
+                        },
+                        {
+                            "start": "18:30",
+                            "end": "22:00",
+                            "type": "OPEN"
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}
