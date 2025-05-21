@@ -1,9 +1,11 @@
-package com.demo.aerztekasse.record;
+package com.demo.aerztekasse.records;
 
+import com.demo.aerztekasse.annotation.StartBeforeEnd;
 import com.demo.aerztekasse.annotation.ValidTime;
 
 import jakarta.validation.constraints.NotBlank;
 
+@StartBeforeEnd
 public record OpenIntervalRecord(
 
     @ValidTime(message = "Start time must be in format HH:mm")

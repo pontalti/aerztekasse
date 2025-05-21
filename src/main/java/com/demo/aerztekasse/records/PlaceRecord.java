@@ -1,4 +1,4 @@
-package com.demo.aerztekasse.record;
+package com.demo.aerztekasse.records;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;

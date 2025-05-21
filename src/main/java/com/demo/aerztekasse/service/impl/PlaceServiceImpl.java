@@ -2,204 +2,107 @@ package com.demo.aerztekasse.service.impl;
 
 import java.time.DayOfWeek;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.demo.aerztekasse.entity.DayOpening;
-import com.demo.aerztekasse.entity.OpenInterval;
-import com.demo.aerztekasse.entity.OpeningHours;
 import com.demo.aerztekasse.entity.Place;
-import com.demo.aerztekasse.record.OpenIntervalRecord;
-import com.demo.aerztekasse.record.OpeningGroupDTORecord;
-import com.demo.aerztekasse.record.OpeningHoursRecord;
-import com.demo.aerztekasse.record.PlaceDTORecord;
-import com.demo.aerztekasse.record.PlaceRecord;
+import com.demo.aerztekasse.records.OpenIntervalRecord;
+import com.demo.aerztekasse.records.OpeningHoursRecord;
+import com.demo.aerztekasse.records.PlaceRecord;
 import com.demo.aerztekasse.repository.PlaceRepository;
 import com.demo.aerztekasse.service.PlaceService;
 
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
 @Service
 public class PlaceServiceImpl implements PlaceService {
-    
-    private final List<DayOfWeek> dayOrder;        
-    private final PlaceRepository placeRepository;
-    
-    public PlaceServiceImpl(PlaceRepository placeRepository, List<DayOfWeek> dayOrder) {
-        this.placeRepository = placeRepository;
-        this.dayOrder = dayOrder;
+
+    private final PlaceRepository repository;
+
+    public PlaceServiceImpl(PlaceRepository repository) {
+        this.repository = repository;
     }
 
     @Override
     public List<PlaceRecord> savePlace(List<PlaceRecord> places) {
-        List<PlaceRecord> savedPlaces = new ArrayList<>();
-        for (PlaceRecord record : places) {
-            var place = Place.builder()
-                                .label(record.label())
-                                .location(record.location())
-                                .build();
-
-            var openingHours = OpeningHours.builder().build();
-            List<DayOpening> dayOpenings = new ArrayList<>();
-
-            if (record.openingHours() != null && record.openingHours().days() != null) {
-                for (Map.Entry<String, List<OpenIntervalRecord>> entry : record.openingHours().days().entrySet()) {
-                    String dayStr = entry.getKey();
-                    List<OpenIntervalRecord> intervalsRecord = entry.getValue();
-
-                    DayOfWeek dayOfWeek = DayOfWeek.valueOf(dayStr.toUpperCase());
-
-                    var dayOpening = DayOpening.builder()
-                            .dayOfWeek(dayOfWeek)
-                            .openingHours(openingHours)
-                            .build();
-
-                    var intervals = intervalsRecord.stream()
-                            .map(i -> OpenInterval.builder()
-                                                    .startTime(i.start())
-                                                    .endTime(i.end())
-                                                    .type(i.type())
-                                                    .dayOpening(dayOpening)
-                                                    .build())
-                            .toList();
-
-                    dayOpening.setIntervals(intervals);
-                    dayOpenings.add(dayOpening);
-                }
-            }
-
-            openingHours.setDays(dayOpenings);
-            place.setOpeningHours(openingHours);
-            var saved = placeRepository.save(place);
-            var placeRecord = buildPlaceRecord(saved);
-            savedPlaces.add(placeRecord);
-        }
-        return savedPlaces;
+        List<Place> entities = places.stream()
+            .map(this::buildEntity)
+            .collect(Collectors.toList());
+        List<Place> saved = repository.saveAll(entities);
+        return saved.stream()
+            .map(this::buildRecord)
+            .collect(Collectors.toList());
     }
 
     @Override
     public List<PlaceRecord> listAll() {
-        return placeRepository.findAll()
-                                .stream()
-                                .map(this::buildPlaceRecord)
-                                .toList();
+        return repository.findAll().stream()
+            .map(this::buildRecord)
+            .collect(Collectors.toList());
     }
 
     @Override
-    public PlaceRecord findById(Integer id) {
-        var place = placeRepository.findById(Long.valueOf(id)).orElseThrow();
-        return buildPlaceRecord(place);
+    public PlaceRecord findById(Long id) {
+        Place place = repository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "Place not found: " + id));
+        return buildRecord(place);
     }
+
 
     @Override
-    public void deleteById(Integer id) {
-        this.placeRepository.deleteById(Long.valueOf(id));
-    }
-
-    @Override
-    public PlaceDTORecord getGroupedOpeningHoursByPlaceId(Integer id) {
-        var place = placeRepository.findById(Long.valueOf(id)).orElseThrow();
-
-        Map<String, List<DayOfWeek>> grouped = groupDaysWithSameHours(place);
-
-        var presentDays = grouped.values()
-                                    .stream()
-                                    .flatMap(List::stream)
-                                    .distinct()
-                                    .toList();
-
-        var missingDays = dayOrder.stream()
-                                    .filter(day -> !presentDays.contains(day))
-                                    .toList();
-
-        if (!missingDays.isEmpty()) {
-            grouped.put("Closed", new ArrayList<>(missingDays));
+    public void deleteById(Long id) {
+        if (!repository.existsById(id)) {
+            throw new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "Place not found: " + id);
         }
-
-        var groups = grouped.entrySet()
-                .stream()
-                .sorted(Comparator.comparing(entry -> dayOrder.indexOf(entry.getValue().get(0))))
-                .map(entry -> {
-                    if ("Closed".equals(entry.getKey())) {
-                        return new OpeningGroupDTORecord(formatDays(entry.getValue()), List.of("Closed"));
-                    }
-
-                    List<DayOfWeek> days = entry.getValue();
-                    DayOfWeek referenceDay = days.get(0);
-                    var opening = place.getOpeningHours().getDays().stream()
-                            .filter(d -> d.getDayOfWeek().equals(referenceDay))
-                            .findFirst()
-                            .orElse(null);
-
-                    List<String> intervals = new ArrayList<>();
-                    if (opening != null) {
-                        intervals = opening.getIntervals()
-                                            .stream()
-                                            .sorted(Comparator.comparing(OpenInterval::getStartTime))
-                                            .map(i -> i.getStartTime() + " - " + i.getEndTime())
-                                            .toList();
-                    }
-
-                    return new OpeningGroupDTORecord(formatDays(days), intervals);
-                })
-                .toList();
-        
-        return new PlaceDTORecord(place.getLabel(), place.getLocation(), groups);
+        repository.deleteById(id);
     }
 
-    private Map<String, List<DayOfWeek>> groupDaysWithSameHours(Place place) {
-        Map<String, List<DayOfWeek>> grouped = new LinkedHashMap<>();
+    protected Place buildEntity(PlaceRecord record) {
+        var place = Place.builder()
+				            .label(record.label())
+				            .location(record.location())
+				            .days(new ArrayList<>())
+				            .build();
 
-        for (DayOpening day : place.getOpeningHours().getDays()) {
-            var intervals = day.getIntervals()
-                                .stream()
-                                .sorted(Comparator.comparing(OpenInterval::getStartTime))
-                                .map(i -> i.getStartTime() + " - " + i.getEndTime())
-                                .collect(Collectors.joining(", "));
-
-            var dayOfWeek = day.getDayOfWeek();
-            grouped.computeIfAbsent(intervals, k -> new ArrayList<>()).add(dayOfWeek);
-        }
-
-        grouped.forEach((k, v) -> v.sort(Comparator.comparingInt(dayOrder::indexOf)));
-
-        return grouped;
+        record.openingHours().days().forEach((day, intervals) -> {
+            DayOfWeek dayOfWeek = DayOfWeek.valueOf(day.toUpperCase());
+            intervals.forEach(intervalRecord -> {
+                DayOpening dayOpening = DayOpening.builder()
+								                    .dayOfWeek(dayOfWeek)
+								                    .startTime(intervalRecord.start())
+								                    .endTime(intervalRecord.end())
+								                    .type(intervalRecord.type())
+								                    .place(place)
+								                    .build();
+                place.getDays().add(dayOpening);
+            });
+        });
+        return place;
     }
 
-    private String formatDays(List<DayOfWeek> days) {
-        if (days.size() == 1) {
-            return formatDay(days.get(0));
-        }
-        return formatDay(days.get(0)) + " - " + formatDay(days.get(days.size() - 1));
-    }
-
-    private String formatDay(DayOfWeek day) {
-        var name = day.name().toLowerCase();
-        return Character.toUpperCase(name.charAt(0)) + name.substring(1);
-    }
-
-    protected PlaceRecord buildPlaceRecord(Place place) {
-        Map<String, List<OpenIntervalRecord>> dayMap = new LinkedHashMap<>();
-
-        for (DayOpening dayOpening : place.getOpeningHours().getDays()) {
-            var dayKey = dayOpening.getDayOfWeek().name().toLowerCase();
-            var intervals = dayOpening.getIntervals().stream()
-                    .map(interval -> new OpenIntervalRecord(
-                            interval.getStartTime(),
-                            interval.getEndTime(),
-                            interval.getType()
-                    )).toList();
-            dayMap.put(dayKey, intervals);
-        }
+    protected PlaceRecord buildRecord(Place place) {
+        var dayMap = place.getDays()
+        					.stream()
+        					.collect(Collectors.groupingBy(d -> d.getDayOfWeek().name().toLowerCase(),
+						                LinkedHashMap::new,
+						                Collectors.mapping(d -> new OpenIntervalRecord(d.getStartTime(),
+																                        d.getEndTime(),
+																                        d.getType()
+						                					),Collectors.toList()
+                )
+            ));
 
         var openingHoursRecord = new OpeningHoursRecord(dayMap);
-        return new PlaceRecord(place.getId(), place.getLabel(), place.getLocation(), openingHoursRecord);
+        return new PlaceRecord(place.getId(),
+					            place.getLabel(),
+					            place.getLocation(),
+					            openingHoursRecord);
     }
-
+    
 }

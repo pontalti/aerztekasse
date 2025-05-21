@@ -1,4 +1,4 @@
-package com.demo.aerztekasse.record;
+package com.demo.aerztekasse.records;
 
 import java.util.List;
 

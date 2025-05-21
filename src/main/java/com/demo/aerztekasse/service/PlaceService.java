@@ -2,15 +2,13 @@ package com.demo.aerztekasse.service;
 
 import java.util.List;
 
-import com.demo.aerztekasse.record.PlaceDTORecord;
-import com.demo.aerztekasse.record.PlaceRecord;
+import com.demo.aerztekasse.records.PlaceRecord;
 
 public interface PlaceService {
 
-    public List<PlaceRecord> savePlace(List<PlaceRecord> places);
-    public List<PlaceRecord> listAll();
-    public PlaceRecord findById(Integer id);
-    public PlaceDTORecord getGroupedOpeningHoursByPlaceId(Integer id);
-    public void deleteById(Integer id);
-
+	public List<PlaceRecord> savePlace(List<PlaceRecord> places);
+	public List<PlaceRecord> listAll();
+	public PlaceRecord findById(Long id);
+	public void deleteById(Long id);
+    
 }

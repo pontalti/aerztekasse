@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -107,6 +109,21 @@ class AerztekasseApplicationTests {
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
+    
+    @ParameterizedTest
+    @DisplayName("Test createPlace endpoint - bad request validation for wrong time")
+    @CsvSource({"places_wrong_time_1.json,places_wrong_time_2.json,places_wrong_time_3.json"})
+    void createPlaceWrongTime(String fileName) throws Exception {
+        var json = StreamUtils.copyToString(
+                        new ClassPathResource(fileName).getInputStream(),
+                        StandardCharsets.UTF_8);
+
+        mockMvc.perform(post("/places")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
 
     @Test
     @DisplayName("Test groupedOpeningHoursStructure endpoint")
@@ -114,8 +131,8 @@ class AerztekasseApplicationTests {
         var response = mockMvc.perform(get("/places/1/opening-hours/grouped")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").isNotEmpty())
-                .andExpect(jsonPath("$.address").isNotEmpty())
+                .andExpect(jsonPath("$.label").isNotEmpty())
+                .andExpect(jsonPath("$.location").isNotEmpty())
                 .andExpect(jsonPath("$.openingHours").isArray())
                 .andReturn()
                 .getResponse()
@@ -125,9 +142,9 @@ class AerztekasseApplicationTests {
         var openingHours = json.get("openingHours");
 
         for (JsonNode group : openingHours) {
-            assertThat(group.get("days").isTextual()).isTrue();
+            assertThat(group.get("day").isTextual()).isTrue();
 
-            var hours = group.get("hours");
+            var hours = group.get("intervals");
             assertThat(hours).isNotNull();
             assertThat(hours.isArray() || hours.isTextual()).isTrue();
         }

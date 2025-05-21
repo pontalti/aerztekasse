@@ -19,6 +19,5 @@ public class Config {
                         DayOfWeek.SATURDAY,
                         DayOfWeek.SUNDAY);
     }
-
-
+    
 }

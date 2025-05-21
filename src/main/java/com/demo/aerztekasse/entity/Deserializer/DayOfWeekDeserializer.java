@@ -30,19 +30,19 @@ public class DayOfWeekDeserializer extends JsonDeserializer<DayOfWeek> {
 
     @Override
     public DayOfWeek deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-        String input = p.getText().trim();
-        String key = normalize(input);
-        DayOfWeek result = ALIASES.get(key);
-
+        var input = p.getText().trim();
+        var key = normalize(input);
+        var result = ALIASES.get(key);
         if (result == null) {
             throw new IOException("Invalid day of week: " + input);
         }
-
         return result;
     }
 
     private String normalize(String input) {
-        if (input == null || input.isEmpty()) return "";
+        if (input == null || input.isEmpty()) { 
+        	return "";
+        }
         input = input.trim();
         if (input.length() <= 3) {
             return input.substring(0, 1).toUpperCase() + input.substring(1, 3).toLowerCase();

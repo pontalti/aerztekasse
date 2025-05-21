@@ -1,11 +1,13 @@
 package com.demo.aerztekasse.entity;
 
+import java.util.List;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,7 +29,7 @@ public class Place {
     private String label;
     private String location;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    private OpeningHours openingHours;
-
+    @OneToMany(mappedBy = "place", cascade = CascadeType.ALL, orphanRemoval = true )
+    private List<DayOpening> days;
+    
 }
