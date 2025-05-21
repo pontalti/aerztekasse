@@ -46,3 +46,4 @@ gradle/
 
 # Project log folder
 logs/
+bin/
