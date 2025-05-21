@@ -43,3 +43,6 @@ gradle/
 # VS Code
 .vscode/
 *.code-workspace
+
+# Project log folder
+logs/

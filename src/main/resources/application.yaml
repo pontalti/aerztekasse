@@ -42,6 +42,17 @@ spring:
       mode: always
       platform: h2
 
+logging:
+  level:
+    root: INFO
+    com.seuprojeto: DEBUG
+  file:
+    name: logs/app.log
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n"
+
+
 springdoc:
   swagger-ui:
     path: /swagger-ui/index.html

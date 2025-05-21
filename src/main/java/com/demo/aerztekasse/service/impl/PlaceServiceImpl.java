@@ -22,21 +22,18 @@ import com.demo.aerztekasse.record.PlaceRecord;
 import com.demo.aerztekasse.repository.PlaceRepository;
 import com.demo.aerztekasse.service.PlaceService;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class PlaceServiceImpl implements PlaceService {
     
-    private static final List<DayOfWeek> DAY_ORDER = List.of(DayOfWeek.MONDAY,
-                                                                DayOfWeek.TUESDAY,
-                                                                DayOfWeek.WEDNESDAY,
-                                                                DayOfWeek.THURSDAY,
-                                                                DayOfWeek.FRIDAY,
-                                                                DayOfWeek.SATURDAY,
-                                                                DayOfWeek.SUNDAY);
-        
+    private final List<DayOfWeek> dayOrder;        
     private final PlaceRepository placeRepository;
     
-    public PlaceServiceImpl(PlaceRepository placeRepository) {
+    public PlaceServiceImpl(PlaceRepository placeRepository, List<DayOfWeek> dayOrder) {
         this.placeRepository = placeRepository;
+        this.dayOrder = dayOrder;
     }
 
     @Override
@@ -44,9 +41,9 @@ public class PlaceServiceImpl implements PlaceService {
         List<PlaceRecord> savedPlaces = new ArrayList<>();
         for (PlaceRecord record : places) {
             var place = Place.builder()
-                    .label(record.label())
-                    .location(record.location())
-                    .build();
+                                .label(record.label())
+                                .location(record.location())
+                                .build();
 
             var openingHours = OpeningHours.builder().build();
             List<DayOpening> dayOpenings = new ArrayList<>();
@@ -65,11 +62,11 @@ public class PlaceServiceImpl implements PlaceService {
 
                     var intervals = intervalsRecord.stream()
                             .map(i -> OpenInterval.builder()
-                                    .startTime(i.start())
-                                    .endTime(i.end())
-                                    .type(i.type())
-                                    .dayOpening(dayOpening)
-                                    .build())
+                                                    .startTime(i.start())
+                                                    .endTime(i.end())
+                                                    .type(i.type())
+                                                    .dayOpening(dayOpening)
+                                                    .build())
                             .toList();
 
                     dayOpening.setIntervals(intervals);
@@ -88,9 +85,10 @@ public class PlaceServiceImpl implements PlaceService {
 
     @Override
     public List<PlaceRecord> listAll() {
-        return placeRepository.findAll().stream()
-                .map(this::buildPlaceRecord)
-                .toList();
+        return placeRepository.findAll()
+                                .stream()
+                                .map(this::buildPlaceRecord)
+                                .toList();
     }
 
     @Override
@@ -110,14 +108,15 @@ public class PlaceServiceImpl implements PlaceService {
 
         Map<String, List<DayOfWeek>> grouped = groupDaysWithSameHours(place);
 
-        var presentDays = grouped.values().stream()
-                .flatMap(List::stream)
-                .distinct()
-                .toList();
+        var presentDays = grouped.values()
+                                    .stream()
+                                    .flatMap(List::stream)
+                                    .distinct()
+                                    .toList();
 
-        var missingDays = DAY_ORDER.stream()
-                .filter(day -> !presentDays.contains(day))
-                .toList();
+        var missingDays = dayOrder.stream()
+                                    .filter(day -> !presentDays.contains(day))
+                                    .toList();
 
         if (!missingDays.isEmpty()) {
             grouped.put("Closed", new ArrayList<>(missingDays));
@@ -125,7 +124,7 @@ public class PlaceServiceImpl implements PlaceService {
 
         var groups = grouped.entrySet()
                 .stream()
-                .sorted(Comparator.comparing(entry -> DAY_ORDER.indexOf(entry.getValue().get(0))))
+                .sorted(Comparator.comparing(entry -> dayOrder.indexOf(entry.getValue().get(0))))
                 .map(entry -> {
                     if ("Closed".equals(entry.getKey())) {
                         return new OpeningGroupDTORecord(formatDays(entry.getValue()), List.of("Closed"));
@@ -140,10 +139,11 @@ public class PlaceServiceImpl implements PlaceService {
 
                     List<String> intervals = new ArrayList<>();
                     if (opening != null) {
-                        intervals = opening.getIntervals().stream()
-                                .sorted(Comparator.comparing(OpenInterval::getStartTime))
-                                .map(i -> i.getStartTime() + " - " + i.getEndTime())
-                                .toList();
+                        intervals = opening.getIntervals()
+                                            .stream()
+                                            .sorted(Comparator.comparing(OpenInterval::getStartTime))
+                                            .map(i -> i.getStartTime() + " - " + i.getEndTime())
+                                            .toList();
                     }
 
                     return new OpeningGroupDTORecord(formatDays(days), intervals);
@@ -157,16 +157,17 @@ public class PlaceServiceImpl implements PlaceService {
         Map<String, List<DayOfWeek>> grouped = new LinkedHashMap<>();
 
         for (DayOpening day : place.getOpeningHours().getDays()) {
-            var intervals = day.getIntervals().stream()
-                    .sorted(Comparator.comparing(OpenInterval::getStartTime))
-                    .map(i -> i.getStartTime() + " - " + i.getEndTime())
-                    .collect(Collectors.joining(", "));
+            var intervals = day.getIntervals()
+                                .stream()
+                                .sorted(Comparator.comparing(OpenInterval::getStartTime))
+                                .map(i -> i.getStartTime() + " - " + i.getEndTime())
+                                .collect(Collectors.joining(", "));
 
             var dayOfWeek = day.getDayOfWeek();
             grouped.computeIfAbsent(intervals, k -> new ArrayList<>()).add(dayOfWeek);
         }
 
-        grouped.forEach((k, v) -> v.sort(Comparator.comparingInt(DAY_ORDER::indexOf)));
+        grouped.forEach((k, v) -> v.sort(Comparator.comparingInt(dayOrder::indexOf)));
 
         return grouped;
     }
