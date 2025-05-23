@@ -1,14 +1,13 @@
 package com.demo.aerztekasse.validation;
 
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-
 import com.demo.aerztekasse.annotation.ValidTime;
-
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import lombok.extern.slf4j.Slf4j;
+
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 @Slf4j
 public class TimeFormatValidator implements ConstraintValidator<ValidTime, String> {
@@ -30,7 +29,7 @@ public class TimeFormatValidator implements ConstraintValidator<ValidTime, Strin
             LocalTime.parse(value, formatter);
             return true;
         } catch (DateTimeParseException e) {
-            log.error("Erro on TimeFormatValidator -> {}", e);
+            log.error("Error on TimeFormatValidator -> {0}", e);
         }
         return false;
     }

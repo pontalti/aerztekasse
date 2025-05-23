@@ -1,41 +1,33 @@
 package com.demo.aerztekasse.service.impl;
 
-import java.time.DayOfWeek;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-
 import com.demo.aerztekasse.entity.DayOpening;
-import com.demo.aerztekasse.entity.Place;
 import com.demo.aerztekasse.records.OpeningGroupDTORecord;
 import com.demo.aerztekasse.records.PlaceDTORecord;
 import com.demo.aerztekasse.repository.PlaceRepository;
 import com.demo.aerztekasse.service.GroupPlaceService;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.time.DayOfWeek;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
-public class GroupPlaceServiceImpl implements GroupPlaceService{
+public class GroupPlaceServiceImpl implements GroupPlaceService {
 
-	private final List<DayOfWeek> dayOrder;
+    private final List<DayOfWeek> dayOrder;
     private final PlaceRepository repository;
 
     public GroupPlaceServiceImpl(PlaceRepository repository, List<DayOfWeek> dayOrder) {
         this.repository = repository;
         this.dayOrder = dayOrder;
     }
-	
+
     @Override
     public PlaceDTORecord getGroupedOpeningHoursByPlaceId(Long id) {
-        Place place = repository.findById(id)
-        						.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Place not found: " + id));
+        var place = repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Place not found: " + id));
 
         var byDay = place.getDays().stream().collect(Collectors.groupingBy(DayOpening::getDayOfWeek));
 
@@ -50,9 +42,9 @@ public class GroupPlaceServiceImpl implements GroupPlaceService{
                 intervals = List.of("closed");
             } else {
                 intervals = opens.stream()
-                    .sorted(Comparator.comparing(DayOpening::getStartTime))
-                    .map(o -> o.getStartTime() + " - " + o.getEndTime())
-                    .collect(Collectors.toList());
+                        .sorted(Comparator.comparing(DayOpening::getStartTime))
+                        .map(o -> o.getStartTime() + " - " + o.getEndTime())
+                        .collect(Collectors.toList());
             }
 
             var key = String.join(", ", intervals);
@@ -61,20 +53,20 @@ public class GroupPlaceServiceImpl implements GroupPlaceService{
         }
 
         var openingGroups = groupedDays.entrySet()
-        								.stream()
-							            .sorted(Comparator.comparing(e -> this.dayOrder.indexOf(e.getValue().get(0))))
-							            .map(e -> new OpeningGroupDTORecord(
-							                formatDays(e.getValue()),
-							                intervalMap.get(e.getKey())
-							            ))
-							            .collect(Collectors.toList());
+                .stream()
+                .sorted(Comparator.comparing(e -> this.dayOrder.indexOf(e.getValue().getFirst())))
+                .map(e -> new OpeningGroupDTORecord(
+                        formatDays(e.getValue()),
+                        intervalMap.get(e.getKey())
+                ))
+                .collect(Collectors.toList());
 
         return new PlaceDTORecord(place.getId(),
-						            place.getLabel(),
-						            place.getLocation(),
-						            openingGroups);
+                place.getLabel(),
+                place.getLocation(),
+                openingGroups);
     }
-	
+
     protected String formatDay(DayOfWeek day) {
         var name = day.name().toLowerCase();
         return Character.toUpperCase(name.charAt(0)) + name.substring(1);
@@ -82,8 +74,8 @@ public class GroupPlaceServiceImpl implements GroupPlaceService{
 
     protected String formatDays(List<DayOfWeek> days) {
         if (days.size() == 1) {
-            return formatDay(days.get(0));
+            return formatDay(days.getFirst());
         }
-        return formatDay(days.get(0)) + " - " + formatDay(days.get(days.size() - 1));
+        return formatDay(days.getFirst()) + " - " + formatDay(days.getLast());
     }
 }
