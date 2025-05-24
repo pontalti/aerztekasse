@@ -1,8 +1,8 @@
 package com.demo.aerztekasse.service.impl;
 
 import com.demo.aerztekasse.entity.DayOpening;
-import com.demo.aerztekasse.records.OpeningGroupDTORecord;
-import com.demo.aerztekasse.records.PlaceDTORecord;
+import com.demo.aerztekasse.records.GroupedOpeningDayRecord;
+import com.demo.aerztekasse.records.GroupedPlaceRecord;
 import com.demo.aerztekasse.repository.PlaceRepository;
 import com.demo.aerztekasse.service.GroupPlaceService;
 import org.springframework.http.HttpStatus;
@@ -25,7 +25,7 @@ public class GroupPlaceServiceImpl implements GroupPlaceService {
     }
 
     @Override
-    public PlaceDTORecord getGroupedOpeningHoursByPlaceId(Long id) {
+    public GroupedPlaceRecord getGroupedOpeningHoursByPlaceId(Long id) {
         var place = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Place not found: " + id));
 
@@ -55,13 +55,13 @@ public class GroupPlaceServiceImpl implements GroupPlaceService {
         var openingGroups = groupedDays.entrySet()
                 .stream()
                 .sorted(Comparator.comparing(e -> this.dayOrder.indexOf(e.getValue().getFirst())))
-                .map(e -> new OpeningGroupDTORecord(
+                .map(e -> new GroupedOpeningDayRecord(
                         formatDays(e.getValue()),
                         intervalMap.get(e.getKey())
                 ))
                 .collect(Collectors.toList());
 
-        return new PlaceDTORecord(place.getId(),
+        return new GroupedPlaceRecord(place.getId(),
                 place.getLabel(),
                 place.getLocation(),
                 openingGroups);

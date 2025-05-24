@@ -1,10 +1,7 @@
 package com.demo.aerztekasse;
 
-import java.nio.charset.StandardCharsets;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -18,13 +15,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.util.StreamUtils;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
 @SpringBootTest(webEnvironment = WebEnvironment.MOCK, classes = AerztekasseApplication.class)
@@ -37,10 +33,16 @@ class AerztekasseApplicationTests {
     @Autowired
     private ObjectMapper objectMapper;
 
+    private static String readJsonFile(String fileName) throws IOException {
+        return StreamUtils.copyToString(
+                new ClassPathResource(fileName).getInputStream(),
+                StandardCharsets.UTF_8);
+    }
+
     @Test
     @DisplayName("Test home endpoint")
     void homeEndpoint() throws Exception {
-        mockMvc.perform(get("/"))
+        this.mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Aerztekasse - code challenge - Home!"));
     }
@@ -48,7 +50,7 @@ class AerztekasseApplicationTests {
     @Test
     @DisplayName("Test getAllPlaces endpoint")
     void getAllPlaces() throws Exception {
-        mockMvc.perform(get("/places"))
+        this.mockMvc.perform(get("/places"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
@@ -56,26 +58,24 @@ class AerztekasseApplicationTests {
     @Test
     @DisplayName("Test getPlaceById endpoint")
     void getPlaceById() throws Exception {
-        mockMvc.perform(get("/places/1"))
+        this.mockMvc.perform(get("/places/1"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
-	@Test
+    @Test
     @DisplayName("Test deleteById endpoint")
     void deleteById() throws Exception {
-        mockMvc.perform(delete("/places/2"))
+        this.mockMvc.perform(delete("/places/2"))
                 .andExpect(status().isOk());
     }
 
     @Test
     @DisplayName("Test createPlace endpoint")
     void createPlace() throws Exception {
-        var json = StreamUtils.copyToString(
-                        new ClassPathResource("places.json").getInputStream(),
-                        StandardCharsets.UTF_8);
+        var json = readJsonFile("places.json");
 
-        mockMvc.perform(post("/places")
+        this.mockMvc.perform(post("/places")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
@@ -85,11 +85,9 @@ class AerztekasseApplicationTests {
     @Test
     @DisplayName("Test createPlace endpoint - bad request validation")
     void createPlaceBadRequest() throws Exception {
-        var json = StreamUtils.copyToString(
-                        new ClassPathResource("places_bad_request.json").getInputStream(),
-                        StandardCharsets.UTF_8);
+        var json = readJsonFile("places_bad_request.json");
 
-        mockMvc.perform(post("/places")
+        this.mockMvc.perform(post("/places")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isBadRequest())
@@ -99,26 +97,22 @@ class AerztekasseApplicationTests {
     @Test
     @DisplayName("Test createPlace endpoint - bad request validation")
     void createPlaceMalformed() throws Exception {
-        var json = StreamUtils.copyToString(
-                        new ClassPathResource("places_malformed.json").getInputStream(),
-                        StandardCharsets.UTF_8);
+        var json = readJsonFile("places_malformed.json");
 
-        mockMvc.perform(post("/places")
+        this.mockMvc.perform(post("/places")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
-    
+
     @ParameterizedTest
     @DisplayName("Test createPlace endpoint - bad request validation for wrong time")
-    @CsvSource({"places_wrong_time_1.json,places_wrong_time_2.json,places_wrong_time_3.json"})
+    @CsvSource({"places_wrong_time_1.json", "places_wrong_time_2.json", "places_wrong_time_3.json"})
     void createPlaceWrongTime(String fileName) throws Exception {
-        var json = StreamUtils.copyToString(
-                        new ClassPathResource(fileName).getInputStream(),
-                        StandardCharsets.UTF_8);
+        var json = readJsonFile(fileName);
 
-        mockMvc.perform(post("/places")
+        this.mockMvc.perform(post("/places")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isBadRequest())
@@ -129,7 +123,7 @@ class AerztekasseApplicationTests {
     @DisplayName("Test groupedOpeningHoursStructure endpoint")
     void groupedOpeningHoursStructure() throws Exception {
         var response = mockMvc.perform(get("/places/1/opening-hours/grouped")
-                .accept(MediaType.APPLICATION_JSON))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.label").isNotEmpty())
                 .andExpect(jsonPath("$.location").isNotEmpty())
@@ -138,7 +132,7 @@ class AerztekasseApplicationTests {
                 .getResponse()
                 .getContentAsString();
 
-        var json = objectMapper.readTree(response);
+        var json = this.objectMapper.readTree(response);
         var openingHours = json.get("openingHours");
 
         for (JsonNode group : openingHours) {
@@ -148,5 +142,40 @@ class AerztekasseApplicationTests {
             assertThat(hours).isNotNull();
             assertThat(hours.isArray() || hours.isTextual()).isTrue();
         }
+    }
+
+    @ParameterizedTest
+    @DisplayName("Test updatePlace endpoint - full update")
+    @CsvSource({"places.json,place_update.json"})
+    void updatePlace(String createFileName, String updateFileName) throws Exception {
+        var createdJson = readJsonFile(createFileName);
+        var postResult = mockMvc.perform(post("/places")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createdJson))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        var arrayNode = this.objectMapper.readTree(postResult);
+
+        var firstItem = arrayNode.get(0);
+        var createdId = firstItem.get("id").asLong();
+
+        var updateJsonRaw = readJsonFile(updateFileName);
+        var updateNode = this.objectMapper.readTree(updateJsonRaw);
+
+        ((com.fasterxml.jackson.databind.node.ObjectNode) updateNode).put("id", createdId);
+        var updatedJson = this.objectMapper.writeValueAsString(updateNode);
+
+        this.mockMvc.perform(put("/places")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updatedJson))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id").value(createdId))
+                .andExpect(jsonPath("$.label").value("Stadio Giuseppe Meazza"))
+                .andExpect(jsonPath("$.location").value("Piazzale Angelo Moratti, 20151 Milano MI, Itália"));
     }
 }

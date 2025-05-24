@@ -1,9 +1,9 @@
 package com.demo.aerztekasse.service;
 
-import com.demo.aerztekasse.records.PlaceDTORecord;
+import com.demo.aerztekasse.records.GroupedPlaceRecord;
 
 public interface GroupPlaceService {
-	
-    public PlaceDTORecord getGroupedOpeningHoursByPlaceId(Long id);
-    
+
+    public GroupedPlaceRecord getGroupedOpeningHoursByPlaceId(Long id);
+
 }

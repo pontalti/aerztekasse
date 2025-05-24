@@ -1,0 +1,47 @@
+{
+  "id": 3,
+  "label": "Stadio Giuseppe Meazza",
+  "location": "Piazzale Angelo Moratti, 20151 Milano MI, Itália",
+  "openingHours": {
+    "days": {
+      "wednesday": [
+        {
+          "start": "11:30",
+          "end": "15:00",
+          "type": "OPEN"
+        },
+        {
+          "start": "18:30",
+          "end": "00:00",
+          "type": "OPEN"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "11:30",
+          "end": "15:00",
+          "type": "OPEN"
+        },
+        {
+          "start": "18:30",
+          "end": "00:00",
+          "type": "OPEN"
+        }
+      ],
+      "saturday": [
+        {
+          "start": "18:00",
+          "end": "00:00",
+          "type": "OPEN"
+        }
+      ],
+      "sunday": [
+        {
+          "start": "15:00",
+          "end": "16:00",
+          "type": "OPEN"
+        }
+      ]
+    }
+  }
+}

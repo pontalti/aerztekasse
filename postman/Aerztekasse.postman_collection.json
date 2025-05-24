@@ -35,6 +35,34 @@
 			"response": []
 		},
 		{
+			"name": "Create place Copy",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\": 3,\r\n    \"label\": \"Stadio Giuseppe Meazza\",\r\n    \"location\": \"Piazzale Angelo Moratti, 20151 Milano MI, Itália\",\r\n    \"openingHours\": {\r\n        \"days\": {\r\n            \"wednesday\": [\r\n                {\r\n                    \"start\": \"11:30\",\r\n                    \"end\": \"15:00\",\r\n                    \"type\": \"OPEN\"\r\n                },\r\n                {\r\n                    \"start\": \"18:30\",\r\n                    \"end\": \"00:00\",\r\n                    \"type\": \"OPEN\"\r\n                }\r\n            ],\r\n            \"thursday\": [\r\n                {\r\n                    \"start\": \"11:30\",\r\n                    \"end\": \"15:00\",\r\n                    \"type\": \"OPEN\"\r\n                },\r\n                {\r\n                    \"start\": \"18:30\",\r\n                    \"end\": \"00:00\",\r\n                    \"type\": \"OPEN\"\r\n                }\r\n            ],\r\n            \"saturday\": [\r\n                {\r\n                    \"start\": \"18:00\",\r\n                    \"end\": \"00:00\",\r\n                    \"type\": \"OPEN\"\r\n                }\r\n            ],\r\n            \"sunday\": [\r\n                {\r\n                    \"start\": \"15:00\",\r\n                    \"end\": \"16:00\",\r\n                    \"type\": \"OPEN\"\r\n                }\r\n            ]\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/places",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"places"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "list all",
 			"request": {
 				"method": "GET",
